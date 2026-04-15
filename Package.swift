@@ -9,15 +9,22 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
     ],
     targets: [
+        // sqlite3 system library — works on both macOS and Linux
+        .systemLibrary(
+            name: "CSQLite",
+            path: "Sources/CSQLite",
+            pkgConfig: "sqlite3",
+            providers: [.apt(["libsqlite3-dev"]), .brew(["sqlite3"])]
+        ),
         // Library target — all logic lives here, importable by tests
         .target(
             name: "KiroBridgeCore",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "CSQLite",
             ],
-            path: "Sources/KiroBridgeCore",
-            linkerSettings: [.linkedLibrary("sqlite3")]
+            path: "Sources/KiroBridgeCore"
         ),
         // Thin executable target — just calls KiroBridgeCommand.main()
         .executableTarget(

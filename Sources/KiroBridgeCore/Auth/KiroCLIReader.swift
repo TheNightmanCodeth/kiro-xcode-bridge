@@ -1,5 +1,5 @@
 import Foundation
-import SQLite3
+import CSQLite
 
 /// Reads Kiro CLI credentials from its SQLite3 database.
 struct KiroCLIReader {
