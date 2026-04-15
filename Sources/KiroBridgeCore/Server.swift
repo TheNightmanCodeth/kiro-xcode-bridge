@@ -7,6 +7,7 @@ func buildApp(
     region: String,
     tokenManager: TokenManager,
     steeringLoader: SteeringLoader,
+    models: [OpenAIModel],
     verbose: Bool
 ) -> some ApplicationProtocol {
     let deps = ChatDependencies(
@@ -29,7 +30,7 @@ func buildApp(
 
     // GET /v1/models
     router.get("/v1/models") { request, context in
-        try await handleModels(request: request, context: context)
+        try await handleModels(request: request, context: context, models: models)
     }
 
     // POST /v1/chat/completions

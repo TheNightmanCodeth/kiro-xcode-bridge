@@ -51,10 +51,25 @@ public struct KiroBridgeCommand: AsyncParsableCommand {
         let ruleCount = steeringLoader.rules.isEmpty ? 0 :
             steeringLoader.rules.components(separatedBy: "\n\n---\n\n").filter { !$0.isEmpty }.count
 
+        let models: [OpenAIModel]
+        if let token = try? await tokenManager.getValidToken(),
+           let apiModels = await ModelFetcher.fetch(
+               token: token,
+               profileArn: await tokenManager.profileArn,
+               region: region
+           ) {
+            models = apiModels
+        } else if let cliModels = KiroCLIModels.fetch(verbose: verbose) {
+            models = cliModels
+        } else {
+            models = KiroConfig.models
+        }
+
         print("kiro-bridge: Starting on http://127.0.0.1:\(port)")
         print("   Region:  \(region)")
         print("   Project: \(projectPath)")
         print("   Auth:    \(await tokenManager.method)")
+        print("   Models:  \(models.map(\.id).joined(separator: ", "))")
         if ruleCount > 0 {
             print("   Steering: \(ruleCount) file(s) loaded")
         }
@@ -68,6 +83,7 @@ public struct KiroBridgeCommand: AsyncParsableCommand {
             region: region,
             tokenManager: tokenManager,
             steeringLoader: steeringLoader,
+            models: models,
             verbose: verbose
         )
         try await app.runService()
