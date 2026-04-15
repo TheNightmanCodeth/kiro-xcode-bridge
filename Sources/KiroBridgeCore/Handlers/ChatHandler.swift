@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 import Hummingbird
 import NIOCore
 
@@ -18,10 +21,10 @@ func handleChat(
 ) async throws -> Response {
     // 1. Decode the OpenAI request
     let body = try await request.body.collect(upTo: 8 * 1024 * 1024)
-    let openAIRequest = try JSONDecoder().decode(OpenAIChatRequest.self, from: Data(buffer: body))
+    let openAIRequest = try JSONDecoder().decode(OpenAIChatRequest.self, from: Data(body.readableBytesView))
 
     if deps.verbose {
-        fputs("kiro-bridge: POST /v1/chat/completions model=\(openAIRequest.model)\n", stderr)
+        writeStderr("kiro-bridge: POST /v1/chat/completions model=\(openAIRequest.model)\n")
     }
 
     // 2. Get bearer token
@@ -62,7 +65,7 @@ func handleChat(
     )
 
     if deps.verbose {
-        fputs("kiro-bridge: model: \(rawModel) → \(modelId), auth: \(authType)\n", stderr)
+        writeStderr("kiro-bridge: model: \(rawModel) → \(modelId), auth: \(authType)\n")
     }
 
     // 5. Build upstream URLRequest
@@ -73,7 +76,7 @@ func handleChat(
     )
 
     if deps.verbose {
-        fputs("kiro-bridge: → POST \(KiroConfig.chatURL(region: deps.region))\n", stderr)
+        writeStderr("kiro-bridge: → POST \(KiroConfig.chatURL(region: deps.region))\n")
     }
 
     let isStreaming = openAIRequest.stream ?? true
@@ -118,7 +121,7 @@ private func streamingResponse(
                 var errBody = Data()
                 for try await byte in asyncBytes { errBody.append(byte) }
                 let errBodyStr = String(data: errBody, encoding: .utf8) ?? ""
-                fputs("kiro-bridge: \(httpResponse.statusCode) body: \(errBodyStr.prefix(500))\n", stderr)
+                writeStderr("kiro-bridge: \(httpResponse.statusCode) body: \(errBodyStr.prefix(500))\n")
                 _ = try await tokenManager.forceRefresh()
                 let errMsg = "data: {\"error\":\"HTTP \(httpResponse.statusCode) — token refreshed, please retry\"}\n\ndata: [DONE]\n\n"
                 continuation.yield(ByteBuffer(string: errMsg))
@@ -130,7 +133,7 @@ private func streamingResponse(
                 var errBody = Data()
                 for try await byte in asyncBytes { errBody.append(byte) }
                 let errBodyStr = String(data: errBody, encoding: .utf8) ?? "(no body)"
-                fputs("kiro-bridge: HTTP \(httpResponse.statusCode) error: \(errBodyStr.prefix(500))\n", stderr)
+                writeStderr("kiro-bridge: HTTP \(httpResponse.statusCode) error: \(errBodyStr.prefix(500))\n")
                 let escaped = errBodyStr.prefix(200).replacingOccurrences(of: "\"", with: "\\\"")
                 let errMsg = "data: {\"error\":\"HTTP \(httpResponse.statusCode): \(escaped)\"}\n\ndata: [DONE]\n\n"
                 continuation.yield(ByteBuffer(string: errMsg))
@@ -154,7 +157,7 @@ private func streamingResponse(
                             let sseData = SSEWriter.chunk(text, model: model, id: id)
                             continuation.yield(ByteBuffer(string: sseData))
                             if verbose {
-                                fputs("kiro-bridge: ← \(text.prefix(60))\n", stderr)
+                                writeStderr("kiro-bridge: ← \(text.prefix(60))\n")
                             }
                         }
                     }
@@ -225,7 +228,7 @@ private func nonStreamingResponse(
     return Response(
         status: .ok,
         headers: headers,
-        body: .init(byteBuffer: .init(data: responseData))
+        body: .init(byteBuffer: ByteBuffer(bytes: responseData))
     )
 }
 

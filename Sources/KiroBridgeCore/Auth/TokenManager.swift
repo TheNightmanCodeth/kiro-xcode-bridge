@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Thread-safe token lifecycle manager.
 /// Handles proactive refresh before expiry, with fallback to device code flow.
@@ -57,7 +60,7 @@ actor TokenManager {
             } catch {
                 // If refresh failed and token is still valid, use it with a warning
                 if creds.expiresAt > Date() {
-                    fputs("kiro-bridge: warning: token refresh failed, using existing token. Error: \(error)\n", stderr)
+                    writeStderr("kiro-bridge: warning: token refresh failed, using existing token. Error: \(error)\n")
                 } else {
                     throw error
                 }

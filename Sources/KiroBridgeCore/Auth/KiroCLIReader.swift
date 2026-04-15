@@ -124,7 +124,7 @@ extension KiroCLIReader {
         var db: OpaquePointer?
         guard sqlite3_open_v2(dbPath.path, &db, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK,
               let db else {
-            fputs("kiro-bridge: warning: could not open SQLite for write-back\n", stderr)
+            writeStderr("kiro-bridge: warning: could not open SQLite for write-back\n")
             return
         }
         defer { sqlite3_close(db) }

@@ -9,5 +9,5 @@ func handleModels(request _: Request, context _: some RequestContext) async thro
     var headers = HTTPFields()
     headers[.contentType] = "application/json"
 
-    return Response(status: .ok, headers: headers, body: .init(byteBuffer: .init(data: data)))
+    return Response(status: .ok, headers: headers, body: .init(byteBuffer: ByteBuffer(bytes: data)))
 }

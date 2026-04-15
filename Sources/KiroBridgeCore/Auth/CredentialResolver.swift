@@ -16,27 +16,27 @@ struct CredentialResolver {
     func resolve() async throws -> TokenManager {
         // 1. API key
         if let key = apiKey, !key.isEmpty {
-            if verbose { fputs("kiro-bridge: auth: API key\n", stderr) }
+            if verbose { writeStderr("kiro-bridge: auth: API key\n") }
             return TokenManager(staticToken: key, method: .apiKey, region: region)
         }
 
         if !forceLogin {
             // 2. kiro-cli SQLite
             if let creds = try? KiroCLIReader.read() {
-                if verbose { fputs("kiro-bridge: auth: \(AuthMethod.kiroCLISQLite(email: nil))\n", stderr) }
+                if verbose { writeStderr("kiro-bridge: auth: \(AuthMethod.kiroCLISQLite(email: nil))\n") }
                 return TokenManager(credentials: creds, method: .kiroCLISQLite(email: nil), region: region)
             }
 
             // 3. SSO cache
             if let creds = try? SSOCacheReader.read() {
                 let filename = creds.sourceCacheFile?.lastPathComponent ?? "unknown"
-                if verbose { fputs("kiro-bridge: auth: SSO cache (\(filename))\n", stderr) }
+                if verbose { writeStderr("kiro-bridge: auth: SSO cache (\(filename))\n") }
                 return TokenManager(credentials: creds, method: .ssoCache(file: filename), region: region)
             }
 
             // 4. Bridge cache
             if let creds = TokenStore.load(), creds.expiresAt > Date() {
-                if verbose { fputs("kiro-bridge: auth: bridge cache\n", stderr) }
+                if verbose { writeStderr("kiro-bridge: auth: bridge cache\n") }
                 return TokenManager(credentials: creds, method: .bridgeCache, region: region)
             }
         }

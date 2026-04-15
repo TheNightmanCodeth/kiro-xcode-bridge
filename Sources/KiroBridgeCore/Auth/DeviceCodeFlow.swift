@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 /// Interactive AWS SSO OIDC device-code login flow.
 /// Used when no cached credentials exist (first-time setup).
