@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - os: macos
+            arch: arm64
+            runner: macos-15
+            artifact: kiro-bridge-macos-arm64
+          - os: linux
+            arch: x86_64
+            runner: ubuntu-24.04
+            artifact: kiro-bridge-linux-x86_64
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            artifact: kiro-bridge-linux-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode (macOS)
+        if: matrix.os == 'macos'
+        run: sudo xcode-select -s /Applications/Xcode_16.3.app
+
+      - name: Install Swift (Linux)
+        if: matrix.os == 'linux'
+        uses: vapor/swiftly-action@v0.2
+        with:
+          toolchain: latest
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release binary
+        run: swift build -c release --product kiro-bridge
+
+      - name: Prepare artifact
+        run: |
+          cp .build/release/kiro-bridge ${{ matrix.artifact }}
+          chmod +x ${{ matrix.artifact }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+          retention-days: 7
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
