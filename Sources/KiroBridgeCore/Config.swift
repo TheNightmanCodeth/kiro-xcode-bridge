@@ -14,6 +14,9 @@ enum KiroConfig {
     /// Kiro API host template. Use `apiHost(region:)`.
     static let apiHostTemplate = "https://q.%@.amazonaws.com"
 
+    /// CodeWhisperer runtime host template. Use `codewhispererURL(region:)`.
+    static let codewhispererHostTemplate = "https://codewhisperer.%@.amazonaws.com"
+
     /// Kiro Desktop Auth refresh URL template.
     static let kiroDesktopRefreshTemplate = "https://prod.%@.auth.desktop.kiro.dev/refreshToken"
 
@@ -63,6 +66,10 @@ enum KiroConfig {
 
     static func chatURL(region: String) -> URL {
         URL(string: apiHost(region: region) + chatPath)!
+    }
+
+    static func codewhispererURL(region: String) -> URL {
+        URL(string: String(format: codewhispererHostTemplate, region))!
     }
 
     static func kiroDesktopRefreshURL(region: String) -> URL {
