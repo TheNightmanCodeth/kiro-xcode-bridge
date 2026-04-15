@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kiro-bridge</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/kiro-bridge</string>
+        <string>--port</string>
+        <string>7077</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HOME</key>
+        <string>/Users/YOURUSERNAME</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/kiro-bridge.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/kiro-bridge.err</string>
+</dict>
+</plist>
