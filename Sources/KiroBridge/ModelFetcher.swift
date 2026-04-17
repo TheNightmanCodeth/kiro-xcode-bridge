@@ -60,20 +60,28 @@ enum ModelFetcher {
       http = response as! HTTPURLResponse
       data = resData
     } catch {
-      throw .networkError(error)
+      logger.error("Failed to perform network request", error: ModelFetcherError.networkError(error))
+      return nil
     }
     
-    guard http.statusCode == 200 else { throw .apiError(status: http.statusCode, response: (http, data)) }
+    guard http.statusCode == 200 else {
+      let error = ModelFetcherError.apiError(status: http.statusCode, response: (http, data))
+      logger.error("Received failure from API", error: error)
+      return nil
+    }
     
     let jsonObject: Any
     do {
       jsonObject = try JSONSerialization.jsonObject(with: data)
     } catch {
-      throw .decodeBodyFailure(error)
+      logger.error("Failed to decode response body", error: ModelFetcherError.decodeBodyFailure(error))
+      return nil
     }
     
     guard let json = jsonObject as? [String: Any], let rawModels = json["models"] as? [[String: Any]] else {
-      throw .invalidJSONObject(String(data: data, encoding: .utf8) ?? "NAN")
+      let str = String(data: data, encoding: .utf8) ?? "NaN"
+      logger.error("Response object is invalid", error: ModelFetcherError.invalidJSONObject(str))
+      return nil
     }
 
     var models: [OpenAIModel] = [OpenAIModel(id: "auto")]  // always include auto first
