@@ -146,7 +146,7 @@ private func streamingResponse(
                 chunkBuffer.append(byte)
 
                 if byte == UInt8(ascii: "}") {
-                    let events = parser.feed(chunkBuffer)
+                    let events = await parser.feed(chunkBuffer)
                     chunkBuffer.removeAll(keepingCapacity: true)
 
                     for event in events {
@@ -163,7 +163,7 @@ private func streamingResponse(
 
             // Flush remaining data
             if !chunkBuffer.isEmpty {
-                for event in parser.feed(chunkBuffer) {
+                for event in await parser.feed(chunkBuffer) {
                     if case .text(let text) = event, !text.isEmpty {
                         continuation.yield(ByteBuffer(string: SSEWriter.chunk(text, model: model, id: id)))
                     }
@@ -210,7 +210,7 @@ private func nonStreamingResponse(
     }
 
     let parser = EventStreamParser()
-    let events = parser.feed(data)
+    let events = await parser.feed(data)
     let fullText = events.compactMap { event -> String? in
         if case .text(let t) = event { return t }
         return nil

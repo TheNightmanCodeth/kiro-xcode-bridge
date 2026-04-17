@@ -10,25 +10,19 @@ let package = Package(
     ],
     targets: [
         // Library target — all logic lives here, importable by tests
-        .target(
-            name: "KiroBridgeCore",
+        .executableTarget(
+            name: "KiroBridge",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
-            path: "Sources/KiroBridgeCore",
+            path: "Sources/KiroBridge",
             linkerSettings: [.linkedLibrary("sqlite3")]
-        ),
-        // Thin executable target — just calls KiroBridgeCommand.main()
-        .executableTarget(
-            name: "kiro-bridge",
-            dependencies: ["KiroBridgeCore"],
-            path: "Sources/kiro-bridge"
         ),
         // Tests import KiroBridgeCore
         .testTarget(
             name: "KiroBridgeTests",
-            dependencies: ["KiroBridgeCore"],
+            dependencies: ["KiroBridge"],
             path: "Tests/KiroBridgeTests"
         ),
     ]
