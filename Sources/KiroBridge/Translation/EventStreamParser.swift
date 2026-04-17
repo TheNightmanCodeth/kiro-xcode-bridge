@@ -14,7 +14,7 @@ import Foundation
 ///   `{"stop":…}`             → stream stop
 ///   `{"usage":…}`            → credit usage
 ///   `{"contextUsagePercentage":…}` → context usage
-final class EventStreamParser: @unchecked Sendable {
+actor EventStreamParser {
     private var buffer: String = ""
 
     // Pattern matching table: (openingKey, eventTag)

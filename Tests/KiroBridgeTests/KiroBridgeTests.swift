@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import KiroBridgeCore
+@testable import KiroBridge
 
 // MARK: - FrontMatterParser tests
 
@@ -44,10 +44,10 @@ struct FrontMatterParserTests {
 @Suite("EventStreamParser")
 struct EventStreamParserTests {
     @Test("Parses a simple content event")
-    func simpleContent() {
+    func simpleContent() async {
         let parser = EventStreamParser()
         let data = Data(#"{"content":"Hello, world!"}"#.utf8)
-        let events = parser.feed(data)
+        let events = await parser.feed(data)
         guard let event = events.first else {
             Issue.record("Expected at least one event")
             return
@@ -60,32 +60,32 @@ struct EventStreamParserTests {
     }
 
     @Test("Handles multiple events in one chunk")
-    func multipleEvents() {
+    func multipleEvents() async {
         let parser = EventStreamParser()
         let raw = #"{"content":"Hello"} {"content":" world"}"#
         let data = Data(raw.utf8)
-        let events = parser.feed(data)
+        let events = await parser.feed(data)
         let texts = events.compactMap { if case .text(let t) = $0 { return t } else { return nil } }
         #expect(texts == ["Hello", " world"])
     }
 
     @Test("Handles content split across two chunks")
-    func splitChunks() {
+    func splitChunks() async {
         let parser = EventStreamParser()
         let part1 = Data(#"{"cont"#.utf8)
         let part2 = Data(#"ent":"Hello"}"#.utf8)
-        let e1 = parser.feed(part1)
-        let e2 = parser.feed(part2)
+        let e1 = await parser.feed(part1)
+        let e2 = await parser.feed(part2)
         #expect(e1.isEmpty)
         let texts = e2.compactMap { if case .text(let t) = $0 { return t } else { return nil } }
         #expect(texts == ["Hello"])
     }
 
     @Test("Skips duplicate content")
-    func deduplicates() {
+    func deduplicates() async {
         let parser = EventStreamParser()
         let raw = #"{"content":"Hello"} {"content":"Hello"}"#
-        let events = parser.feed(Data(raw.utf8))
+        let events = await parser.feed(Data(raw.utf8))
         let texts = events.compactMap { if case .text(let t) = $0 { return t } else { return nil } }
         #expect(texts.count == 1)
         #expect(texts == ["Hello"])

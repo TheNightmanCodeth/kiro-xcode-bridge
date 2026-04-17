@@ -114,18 +114,22 @@ On startup the bridge checks credentials in this order, using the first match:
 | 1 | `KIRO_API_KEY` env var | Pro/Pro+/Power API keys |
 | 2 | kiro-cli SQLite (`~/Library/Application Support/kiro-cli/data.sqlite3`) | Already logged into Kiro CLI |
 | 3 | SSO cache (`~/.aws/sso/cache/*.json`) | Kiro IDE or previous bridge login |
-| 4 | Interactive device code flow | First-time login with no cached credentials |
+| 4 | Bridge token cache (`~/.aws/sso/cache/kiro-bridge-token.json`) | Previous `--login` session |
+| 5 | Interactive device code flow | First-time login with no cached credentials |
 
 Tokens are refreshed automatically before they expire. On a 401/403 from the Kiro API, the bridge forces an immediate refresh.
 
 ## Available models
 
-| Model | Notes |
-|---|---|
-| `claude-sonnet-4.5` | Recommended default |
-| `claude-haiku-4.5` | Faster, lower credit usage |
-| `claude-sonnet-4` | Previous generation |
-| `auto` | Kiro picks the model |
+At startup the bridge calls the Kiro API to fetch the models available to your account. The startup banner prints the active list:
+
+```
+Models:  auto, claude-sonnet-4.5, claude-sonnet-4, claude-haiku-4.5
+```
+
+Free and Pro plans typically include `claude-sonnet-4.5`, `claude-sonnet-4`, `claude-haiku-4.5`, and `auto`. Higher-tier plans may include additional models (Opus, extended context variants, etc.). The `auto` model lets Kiro pick the best model for each request.
+
+If the API call fails (e.g. when using a static API key), the bridge falls back to checking whether kiro-cli is installed and can list models, then finally to a built-in fallback list.
 
 ## Building from source
 
